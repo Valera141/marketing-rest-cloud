@@ -27,26 +27,23 @@ public class SecurityConfiguration {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-      @Bean
-      public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-      http
+    @Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        
+
         .authorizeHttpRequests(auth -> auth
-            // ✅ 1. PERMITIR ACCESO PÚBLICO A SWAGGER Y AL HOME
-            .requestMatchers("/", "/doc/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-            
-            // 2. REGLAS DE TU API (Esto se queda igual)
+            // 1. REGLAS ESPECÍFICAS (Opcional: solo si quieres distinguir roles)
             .requestMatchers("/api/v1/campaigns/**").hasAnyRole("Admin", "Analyst")
             
-            // 3. EL RESTO CERRADO
+            // 2. REGLA DE ORO: TODO LO DEMÁS REQUIERE LOGIN
+            // Esto cubre Swagger, la raíz "/", y cualquier otra cosa.
             .anyRequest().authenticated()
         )
         .httpBasic(withDefaults())
-        .formLogin(withDefaults())
-        
-        // ... (el resto de tu manejo de excepciones sigue igual)
+        .formLogin(withDefaults()) // Habilita el formulario de login visual
+
         .exceptionHandling(exception -> exception
             .defaultAuthenticationEntryPointFor(authenticationEntryPoint, new AntPathRequestMatcher("/api/**"))
             .accessDeniedHandler(accessDeniedHandler)
@@ -68,3 +65,4 @@ public class SecurityConfiguration {
     }
 
 }
+
