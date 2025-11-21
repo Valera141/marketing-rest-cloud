@@ -44,6 +44,15 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         .httpBasic(withDefaults())
         .formLogin(withDefaults()) // Habilita el formulario de login visual
 
+        .logout(logout -> logout
+            .logoutUrl("/logout")             // 1. La dirección para cerrar sesión
+            .logoutSuccessUrl("/login?logout") // 2. A dónde te manda al salir (al login)
+            .invalidateHttpSession(true)      // 3. Borra la sesión del servidor
+            .deleteCookies("JSESSIONID")      // 4. Borra la cookie de memoria
+            .permitAll()                      // 5. Deja que cualquiera pueda cerrar sesión
+        )
+
+        
         .exceptionHandling(exception -> exception
             .defaultAuthenticationEntryPointFor(authenticationEntryPoint, new AntPathRequestMatcher("/api/**"))
             .accessDeniedHandler(accessDeniedHandler)
@@ -65,4 +74,5 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     }
 
 }
+
 
