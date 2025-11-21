@@ -27,30 +27,33 @@ public class SecurityConfiguration {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+      @Bean
+      public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+      http
+        .csrf(AbstractHttpConfigurer::disable)
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        
+        .authorizeHttpRequests(auth -> auth
+            // ✅ 1. PERMITIR ACCESO PÚBLICO A SWAGGER Y AL HOME
+            .requestMatchers("/", "/doc/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
             
-            .authorizeHttpRequests(auth -> auth
-                // 1. HE QUITADO la línea que hacía público a Swagger (.permitAll)
-                // Ahora Swagger caerá en .anyRequest().authenticated() y pedirá password.
-                
-                .requestMatchers("/api/v1/campaigns/**").hasAnyRole("Admin", "Analyst")
-                .anyRequest().authenticated()
-            )
-            .httpBasic(withDefaults())
-            .formLogin(withDefaults())
+            // 2. REGLAS DE TU API (Esto se queda igual)
+            .requestMatchers("/api/v1/campaigns/**").hasAnyRole("Admin", "Analyst")
+            
+            // 3. EL RESTO CERRADO
+            .anyRequest().authenticated()
+        )
+        .httpBasic(withDefaults())
+        .formLogin(withDefaults())
+        
+        // ... (el resto de tu manejo de excepciones sigue igual)
+        .exceptionHandling(exception -> exception
+            .defaultAuthenticationEntryPointFor(authenticationEntryPoint, new AntPathRequestMatcher("/api/**"))
+            .accessDeniedHandler(accessDeniedHandler)
+        );
 
-            .exceptionHandling(exception -> exception
-                .defaultAuthenticationEntryPointFor(authenticationEntryPoint, new AntPathRequestMatcher("/api/**"))
-                
-                .accessDeniedHandler(accessDeniedHandler)
-            );
-
-        return http.build();
-    }
+    return http.build();
+}
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -63,4 +66,5 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
