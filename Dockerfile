@@ -1,20 +1,17 @@
-# 1. Usar una imagen base de Java 21 (Ligera)
-FROM eclipse-temurin:21-jdk-alpine
+# 1. Usamos una imagen que ya tiene Maven y Java 21 instalados
+FROM maven:3.9.9-eclipse-temurin-21-alpine
 
-# 2. Crear carpeta de trabajo
+# 2. Carpeta de trabajo
 WORKDIR /app
 
-# 3. Copiar todos los archivos de tu proyecto al contenedor
+# 3. Copiamos los archivos
 COPY . .
 
-# 4. Dar permisos de ejecución al instalador de Maven
-RUN chmod +x mvnw
+# 4. Compilamos usando el comando 'mvn' directo (no el wrapper ./mvnw)
+RUN mvn clean package -DskipTests
 
-# 5. Compilar el proyecto (saltando los tests para que sea rápido)
-RUN ./mvnw clean package -DskipTests
-
-# 6. Exponer el puerto 8080 (donde vive Spring Boot)
+# 5. Exponemos el puerto
 EXPOSE 8080
 
-# 7. El comando para iniciar la app
+# 6. Ejecutamos el JAR generado
 ENTRYPOINT ["java", "-jar", "target/Marketing-0.0.1-SNAPSHOT.jar"]
